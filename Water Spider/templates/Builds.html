@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Builds</title>
+    <style>
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border: 1px solid black; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        h3, h4 { margin-top: 20px; }
+        .build-section { margin-bottom: 30px; }
+        .build-variant { margin-left: 20px; }
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: #fff;
+            padding: 20px;
+            border: 1px solid #888;
+            max-width: 80%;
+            max-height: 80%;
+            text-align: center;
+        }
+        .modal-content img {
+            max-width: 100%;
+            max-height: 70vh;
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close:hover {
+            color: #000;
+        }
+    </style>
+</head>
+<body>
+    <h2>Builds</h2>
+    
+    <h3>Create New Build</h3>
+    <form action="/create_build" method="post">
+        <label>Build Name: <input name="build_name" placeholder="Enter build name" required></label><br><br>
+        <label>Select Parts:</label><br>
+        {% for pn, part in parts.items() %}
+            <input type="checkbox" name="parts" value="{{ pn }}"> {{ pn }} - {{ part.description }}<br>
+        {% endfor %}
+        <button type="submit">Create Build</button>
+    </form>
+
+    <h3>Existing Builds</h3>
+    <form action="/export_pdf" method="post">
+        {% for build_name, build_list in grouped_builds.items() %}
+            <div class="build-section">
+                <h4>{{ build_name }}</h4>
+                {% for build in build_list %}
+                    <div class="build-variant">
+                        <h5>Variant {{ loop.index }} <a href="/delete_build/{{ build.build_id }}">Delete</a></h5>
+                        <input type="checkbox" name="builds" value="{{ build.build_id }}"> Select for PDF<br>
+                        <table>
+                            <tr>
+                                <th>Part Number</th>
+                                <th>Description</th>
+                                <th>Length (in)</th>
+                                <th>Width (in)</th>
+                                <th>Location</th>
+                                <th>Comments</th>
+                                <th>Image</th>
+                            </tr>
+                            {% for pn in build.parts %}
+                                {% if parts[pn] %}
+                                    <tr>
+                                        <td>{{ pn }}</td>
+                                        <td>{{ parts[pn].description }}</td>
+                                        <td>{{ parts[pn].length }}</td>
+                                        <td>{{ parts[pn].width }}</td>
+                                        <td>{{ parts[pn].location }}</td>
+                                        <td>{{ parts[pn].comments }}</td>
+                                        <td>
+                                            {% if parts[pn].image_path %}
+                                                <a href="#" class="image-link" data-image="{{ parts[pn].image_path }}">Image</a>
+                                            {% else %}
+                                                No Image
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% endif %}
+                            {% endfor %}
+                        </table>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endfor %}
+        <h3>Select Individual Parts for PDF</h3>
+        {% for pn, part in parts.items() %}
+            <input type="checkbox" name="parts" value="{{ pn }}"> {{ pn }} - {{ part.description }}<br>
+        {% endfor %}
+        <br>
+        <button type="submit">Download PDF Summary</button>
+    </form>
+
+    <br><a href="/">HOME</a>
+
+    <!-- Modal for image display -->
+    <div id="imageModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <img id="modalImage" src="" alt="Part Image">
+        </div>
+    </div>
+
+    <!-- Hidden Audio Player -->
+    <audio id="audio" src="{{ url_for('static', filename='background.mp3') }}" loop></audio>
+
+    <script>
+        const audio = document.getElementById('audio');
+
+        function loadAudioState() {
+            const savedTime = sessionStorage.getItem('audioTime');
+            if (savedTime) {
+                audio.currentTime = parseFloat(savedTime);
+                if (sessionStorage.getItem('audioStarted') === 'true') {
+                    audio.play().catch(e => console.error('Playback failed:', e));
+                }
+            }
+        }
+
+        function saveAudioState() {
+            sessionStorage.setItem('audioTime', audio.currentTime);
+        }
+
+        document.addEventListener('click', () => {
+            if (audio.paused) {
+                audio.play().catch(e => console.error('Playback failed:', e));
+                sessionStorage.setItem('audioStarted', 'true');
+            }
+        }, { once: true });
+
+        audio.addEventListener('timeupdate', saveAudioState);
+        window.addEventListener('beforeunload', saveAudioState);
+        window.addEventListener('load', loadAudioState);
+
+        // Modal functionality
+        const modal = document.getElementById('imageModal');
+        const modalImg = document.getElementById('modalImage');
+        const closeBtn = document.getElementsByClassName('close')[0];
+        const imageLinks = document.getElementsByClassName('image-link');
+
+        Array.from(imageLinks).forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                modal.style.display = 'flex';
+                modalImg.src = this.getAttribute('data-image');
+            });
+        });
+
+        closeBtn.addEventListener('click', () => {
+            modal.style.display = 'none';
+        });
+
+        window.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>

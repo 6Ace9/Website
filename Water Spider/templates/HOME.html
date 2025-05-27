@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Welcome to Water Spider</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="background">
+        <!-- Background flash for sky glow -->
+        <div class="background-flash"></div>
+        <div class="background-flash"></div>
+        <!-- Rain effect containers -->
+        <div class="rain"></div>
+        <div class="rain"></div>
+        <div class="rain"></div>
+        <div class="rain"></div>
+        <div class="rain"></div>
+        <div class="rain"></div>
+        <div class="rain"></div>
+        <div class="rain"></div>
+        <div class="rain"></div>
+        <div class="rain"></div>
+        <div class="rain"></div>
+        <div class="rain"></div>
+        <!-- Lightning bolt containers -->
+        <div class="lightning"></div>
+        <div class="lightning"></div>
+        <div class="lightning"></div>
+        <div class="lightning"></div>
+        <div class="lightning"></div>
+        <div class="glow-button1" onclick="location.href='/Inventory'">
+            <span class="label">Inventory</span>
+        </div>
+        <div class="glow-button2" onclick="location.href='/Builds'">
+            <span class="label">Builds</span>
+        </div>
+        <div class="glow-button3" onclick="location.href='/Map'">
+            <span class="label">Map</span>
+        </div>
+    </div>
+
+    <!-- Hidden Audio Player -->
+    <audio id="audio" src="{{ url_for('static', filename='background.mp3') }}" loop></audio>
+
+    <script>
+        const audio = document.getElementById('audio');
+
+        function loadAudioState() {
+            const savedTime = sessionStorage.getItem('audioTime');
+            if (savedTime) {
+                audio.currentTime = parseFloat(savedTime);
+                if (sessionStorage.getItem('audioStarted') === 'true') {
+                    audio.play().catch(e => console.error('Playback failed:', e));
+                }
+            }
+        }
+
+        function saveAudioState() {
+            sessionStorage.setItem('audioTime', audio.currentTime);
+        }
+
+        document.addEventListener('click', () => {
+            if (audio.paused) {
+                audio.play().catch(e => console.error('Playback failed:', e));
+                sessionStorage.setItem('audioStarted', 'true');
+            }
+        }, { once: true });
+
+        audio.addEventListener('timeupdate', saveAudioState);
+        window.addEventListener('beforeunload', saveAudioState);
+        window.addEventListener('load', loadAudioState);
+    </script>
+</body>
+</html>

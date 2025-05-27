@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Water Spider Inventory</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/min/dropzone.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/dropzone.min.css" />
+    <style>
+        #map { border: 0px solid #ccc; width: 50px; height: 50px; background-size: contain; background-repeat: no-repeat; }
+        .dropzone { min-height: 150px; border: 2px dashed #0087F7; background: #f8f8f8; }
+    </style>
+</head>
+<body>
+    <h2>Water Spider Part Entry</h2>
+    <form action="/add_part" method="post" id="partForm">
+        <input name="part_number" placeholder="Part Number" required><br>
+        <input name="description" placeholder="Description"><br>
+        <input name="length" placeholder="Length (in)"><br>
+        <input name="width" placeholder="Width (in)"><br>
+        <input name="location" placeholder="Location"><br>
+        <input name="comments" placeholder="Comments"><br>
+        <input type="hidden" name="image_path" id="image_path"><br>
+        <button type="submit">Save</button>
+    </form>
+
+    <h3>Upload Part Image</h3>
+    <form action="/upload_image" class="dropzone" id="imageDropzone"></form>
+
+    <a href="/">HOME</a>
+
+    <!-- Hidden Audio Player -->
+    <audio id="audio" src="{{ url_for('static', filename='background.mp3') }}" loop></audio>
+
+    <script>
+        const audio = document.getElementById('audio');
+
+        function loadAudioState() {
+            const savedTime = sessionStorage.getItem('audioTime');
+            if (savedTime) {
+                audio.currentTime = parseFloat(savedTime);
+                if (sessionStorage.getItem('audioStarted') === 'true') {
+                    audio.play().catch(e => console.error('Playback failed:', e));
+                }
+            }
+        }
+
+        function saveAudioState() {
+            sessionStorage.setItem('audioTime', audio.currentTime);
+        }
+
+        document.addEventListener('click', () => {
+            if (audio.paused) {
+                audio.play().catch(e => console.error('Playback failed:', e));
+                sessionStorage.setItem('audioStarted', 'true');
+            }
+        }, { once: true });
+
+        audio.addEventListener('timeupdate', saveAudioState);
+        window.addEventListener('beforeunload', saveAudioState);
+        window.addEventListener('load', loadAudioState);
+
+        Dropzone.options.imageDropzone = {
+            paramName: "file",
+            maxFilesize: 5, // MB
+            acceptedFiles: "image/*",
+            maxFiles: 1,
+            init: function() {
+                this.on("success", function(file, response) {
+                    // Store relative path for portability
+                    const relativePath = response.image_path.replace(/^.*[\\\/]static[\\\/]/, '/static/');
+                    document.getElementById("image_path").value = relativePath;
+                    alert("Image uploaded successfully!");
+                });
+                this.on("error", function(file, errorMessage) {
+                    alert("Error uploading image: " + errorMessage);
+                });
+            }
+        };
+    </script>
+</body>
+</html>

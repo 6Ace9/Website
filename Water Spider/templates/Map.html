@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Map Display</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+            position: relative; /* For background layering */
+        }
+        .background2 {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('{{ url_for("static", filename="images/background.png") }}');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            opacity: 0.3; /* Adjust transparency */
+            filter: brightness(1.5); /* Darken the background */
+            z-index: 0; /* Behind all content */
+        }
+        .background2::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.4); /* Dark overlay */
+            z-index: 0; /* Above background, below map */
+        }
+        .map-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            width: 100vw;
+            background-color: rgb(0, 0, 0); /* Semi-transparent overlay for map */
+            z-index: 0; /* Above background and overlay */
+        }
+        img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            transform-origin: center;
+            transition: transform 0.2s;
+            z-index: 0.01; /* Above map-container */
+        }
+
+       /* Solar Flare Effect */
+        .solar-flare {
+            position: fixed;
+            top: -550px;
+            right: -800px;
+            width: 1600px;
+            height: 1600px;
+            background: radial-gradient(
+                circle at center,
+                rgba(255, 245, 200, 0.2) 0%, /* Soft white-gold center, more transparent */
+                rgba(255, 245, 200, 0.1) 50%,
+                rgba(255, 245, 200, 0) 70% /* Fades to fully transparent */
+            );
+            border-radius: 50%; /* Softens edges */
+            opacity: 0.6; /* Reduced base transparency for subtlety */
+            z-index: 2; /* Above background2 and its overlay, below map and buttons */
+            pointer-events: none; /* Prevents interaction */
+            animation: solarPulse 5s ease-in-out infinite; /* Slower, smoother pulsing */
+            transform: translate(30%, -30%); /* Offset to position in top-right corner */
+            box-shadow: 0 0 50px rgba(255, 245, 200, 0.3); /* Adds a soft glare effect */
+        }
+
+        /* Solar flare pulsing animation */
+        @keyframes solarPulse {
+            0% {
+                opacity: 1;
+                transform: translate(30%, -30%) scale(1);
+            }
+            50% {
+                opacity: 1; /* Slightly brighter at peak */
+                transform: translate(30%, -30%) scale(1.05); /* Minimal expansion */
+            }
+            100% {
+                opacity: 1;
+                transform: translate(30%, -30%) scale(1);
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="static/style.css">
+</head>
+<body>
+    <div class="background2"></div> <!-- Background image layer -->
+    <div class="map-container">
+        <img src="{{ url_for('static', filename='images/Middle Earth.jpg') }}" alt="Map">
+    </div>
+    <div class="glow-button4" onclick="location.href='/'">
+            <span class="label">HOME</span>
+    <div class="solar-flare"></div> <!-- Solar flare effect -->
+
+    <!-- Hidden Audio Player -->
+    <audio id="audio" src="{{ url_for('static', filename='background.mp3') }}" loop></audio>
+
+    <script>
+        const audio = document.getElementById('audio');
+
+        function loadAudioState() {
+            const savedTime = sessionStorage.getItem('audioTime');
+            if (savedTime) {
+                audio.currentTime = parseFloat(savedTime);
+                if (sessionStorage.getItem('audioStarted') === 'true') {
+                    audio.play().catch(e => console.error('Playback failed:', e));
+                }
+            }
+        }
+
+        function saveAudioState() {
+            sessionStorage.setItem('audioTime', audio.currentTime);
+        }
+
+        document.addEventListener('click', () => {
+            if (audio.paused) {
+                audio.play().catch(e => console.error('Playback failed:', e));
+                sessionStorage.setItem('audioStarted', 'true');
+            }
+        }, { once: true });
+
+        audio.addEventListener('timeupdate', saveAudioState);
+        window.addEventListener('beforeunload', saveAudioState);
+        window.addEventListener('load', loadAudioState);
+    </script>
+</body>
+</html>
